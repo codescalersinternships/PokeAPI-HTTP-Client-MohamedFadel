@@ -1,6 +1,7 @@
 package pokeapi
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -91,4 +92,27 @@ func (c *Client) doRequest(method, endpoint string, body io.Reader) (*http.Respo
 	}
 
 	return resp, nil
+}
+
+/*
+GetPokemon retrieves information about a Pokemon by its ID or name.
+It returns a Pokemon struct containing the data or an error if the request fails.
+*/
+func (c *Client) GetPokemon(idOrName string) (*Pokemon, error) {
+	resp, err := c.doRequest("GET", fmt.Sprintf("pokemon/%s", idOrName), nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	var pokemon Pokemon
+	if err := json.NewDecoder(resp.Body).Decode(&pokemon); err != nil {
+		return nil, fmt.Errorf("error decoding response: %w", err)
+	}
+
+	return &pokemon, nil
 }
