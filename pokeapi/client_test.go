@@ -85,3 +85,58 @@ func TestGetPokemonError(t *testing.T) {
 		t.Errorf("Expected error message 'unexpected status code: 404', got '%s'", err.Error())
 	}
 }
+
+func TestGetPokemons(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v2/pokemon" {
+			t.Errorf("Expected to request '/api/v2/pokemon', got: %s", r.URL.Path)
+		}
+		if r.URL.RawQuery != "offset=0&limit=2" {
+			t.Errorf("Expected query 'offset=0&limit=2', got: %s", r.URL.RawQuery)
+		}
+		if r.Header.Get("User-Agent") != "Test-Agent" {
+			t.Errorf("Expected User-Agent header to be 'Test-Agent', got: %s", r.Header.Get("User-Agent"))
+		}
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(PokemonList{
+			Count: 1118,
+			Next:  "https://pokeapi.co/api/v2/pokemon?offset=2&limit=2",
+			Results: []struct {
+				Name string `json:"name"`
+				URL  string `json:"url"`
+			}{
+				{Name: "bulbasaur", URL: "https://pokeapi.co/api/v2/pokemon/1/"},
+				{Name: "ivysaur", URL: "https://pokeapi.co/api/v2/pokemon/2/"},
+			},
+		})
+	}))
+	defer ts.Close()
+
+	logger, _ := zap.NewDevelopment()
+	client := NewClient(
+		WithBaseURL(ts.URL+"/api/v2"),
+		WithTimeout(5*time.Second),
+		WithUserAgent("Test-Agent"),
+		WithLogger(logger),
+	)
+
+	pokemonList, err := client.GetPokemons(0, 2)
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+	if pokemonList == nil {
+		t.Fatal("Expected pokemonList to not be nil")
+	}
+	if pokemonList.Count != 1118 {
+		t.Errorf("Expected Count to be 1118, got %d", pokemonList.Count)
+	}
+	if pokemonList.Next != "https://pokeapi.co/api/v2/pokemon?offset=2&limit=2" {
+		t.Errorf("Expected Next to be 'https://pokeapi.co/api/v2/pokemon?offset=20&limit=20', got %v", pokemonList.Next)
+	}
+	if len(pokemonList.Results) != 2 {
+		t.Errorf("Expected 2 results, got %d", len(pokemonList.Results))
+	}
+	if pokemonList.Results[0].Name != "bulbasaur" {
+		t.Errorf("Expected first Pokémon to be 'bulbasaur', got %s", pokemonList.Results[0].Name)
+	}
+}
