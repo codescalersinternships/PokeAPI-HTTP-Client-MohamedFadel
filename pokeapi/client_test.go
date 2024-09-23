@@ -19,13 +19,15 @@ func TestGetPokemon(t *testing.T) {
 			t.Errorf("Expected User-Agent header to be 'Test-Agent', got: %s", r.Header.Get("User-Agent"))
 		}
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(Pokemon{
+		if err := json.NewEncoder(w).Encode(Pokemon{
 			ID:             25,
 			Name:           "pikachu",
 			BaseExperience: 112,
 			Height:         4,
 			Weight:         60,
-		})
+		}); err != nil {
+			t.Errorf("error encoding json: %v", err)
+		}
 	}))
 	defer ts.Close()
 
@@ -98,7 +100,7 @@ func TestGetPokemons(t *testing.T) {
 			t.Errorf("Expected User-Agent header to be 'Test-Agent', got: %s", r.Header.Get("User-Agent"))
 		}
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(PokemonList{
+		if err := json.NewEncoder(w).Encode(PokemonList{
 			Count: 1118,
 			Next:  "https://pokeapi.co/api/v2/pokemon?offset=2&limit=2",
 			Results: []struct {
@@ -108,7 +110,9 @@ func TestGetPokemons(t *testing.T) {
 				{Name: "bulbasaur", URL: "https://pokeapi.co/api/v2/pokemon/1/"},
 				{Name: "ivysaur", URL: "https://pokeapi.co/api/v2/pokemon/2/"},
 			},
-		})
+		}); err != nil {
+			t.Errorf("error encoding json: %v", err)
+		}
 	}))
 	defer ts.Close()
 

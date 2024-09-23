@@ -18,7 +18,12 @@ func main() {
 	}
 
 	logger, _ := zap.NewProduction()
-	defer logger.Sync()
+	defer func() {
+		err := logger.Sync()
+		if err != nil {
+			fmt.Printf("Error syncing logger: %v\n", err)
+		}
+	}()
 
 	client := pokeapi.NewClient(pokeapi.WithLogger(logger))
 
@@ -37,7 +42,12 @@ func getPokemon(client *pokeapi.Client, logger *zap.Logger) {
 	getPokemonCmd := flag.NewFlagSet("get-pokemon", flag.ExitOnError)
 	nameOrID := getPokemonCmd.String("name", "", "Name or ID of the Pokemon")
 
-	getPokemonCmd.Parse(os.Args[2:])
+	err := getPokemonCmd.Parse(os.Args[2:])
+	if err != nil {
+		logger.Error("Failed to parse command flags", zap.Error(err))
+		fmt.Printf("Error parsing flags: %v\n", err)
+		return
+	}
 
 	if *nameOrID == "" {
 		fmt.Println("Error: --name flag is required")
@@ -67,7 +77,12 @@ func getPokemons(client *pokeapi.Client, logger *zap.Logger) {
 	limit := getPokemonsCmd.Int("limit", 20, "Limit the number of Pokemon returned")
 	offset := getPokemonsCmd.Int("offset", 0, "Offset for pagination")
 
-	getPokemonsCmd.Parse(os.Args[2:])
+	err := getPokemonsCmd.Parse(os.Args[2:])
+	if err != nil {
+		logger.Error("Failed to parse command flags", zap.Error(err))
+		fmt.Printf("Error parsing flags: %v\n", err)
+		return
+	}
 
 	pokemonList, err := client.GetPokemons(*offset, *limit)
 	if err != nil {
