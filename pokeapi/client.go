@@ -116,3 +116,27 @@ func (c *Client) GetPokemon(idOrName string) (*Pokemon, error) {
 
 	return &pokemon, nil
 }
+
+/*
+GetPokemons retrieves a list of Pokémon with pagination
+It returns a PokemonList struct containing the paginated list of pokemons or an error if request fails.
+*/
+func (c *Client) GetPokemons(offset, limit int) (*PokemonList, error) {
+	endpoint := fmt.Sprintf("pokemon?offset=%d&limit=%d", offset, limit)
+	resp, err := c.doRequest("GET", endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	var pokemonList PokemonList
+	if err := json.NewDecoder(resp.Body).Decode(&pokemonList); err != nil {
+		return nil, fmt.Errorf("error decoding response: %w", err)
+	}
+
+	return &pokemonList, nil
+}
