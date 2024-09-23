@@ -34,6 +34,6 @@ docker-build:
 	docker build -t $(DOCKER_IMAGE_NAME) .
 
 docker-run:
-	docker run --rm $(DOCKER_IMAGE_NAME)
+	docker run --rm -it --name "pokeapiclient" --hostname "pokeapiclient" $(DOCKER_IMAGE_NAME) 
 
 .PHONY: all build test clean run deps fmt lint docker-build docker-run

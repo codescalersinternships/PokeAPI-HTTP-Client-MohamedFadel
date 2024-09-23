@@ -12,10 +12,10 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o pokeapi-cli .
 
 FROM alpine:latest
 
-RUN apk --no-cache add ca-certificates
+RUN apk --no-cache add ca-certificates bash
 
 WORKDIR /root/
 
-COPY --from=builder /app/pokeapi-cli .
+COPY --from=builder /app/pokeapi-cli /usr/local/bin/pokeapi-cli
 
-ENTRYPOINT ["./pokeapi-cli"]
+ENTRYPOINT ["/bin/bash"]
