@@ -12,8 +12,8 @@ type PokemonList struct {
 	Count    int    `json:"count"`
 	Next     string `json:"next"`
 	Pervious string `json:"previous"`
-	Result   []struct {
+	Results  []struct {
 		Name string `json:"name"`
 		URL  string `json:"url"`
-	} `json:"result"`
+	} `json:"results"`
 }
