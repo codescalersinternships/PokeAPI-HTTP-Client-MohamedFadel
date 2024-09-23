@@ -66,7 +66,7 @@ func (c *Client) doRequest(method, endpoint string, body io.Reader) (*http.Respo
 			zap.String("method", method),
 			zap.String("url", url))
 
-		resp, err := c.httpClient.Do(req)
+		resp, err = c.httpClient.Do(req)
 		if err != nil {
 			c.logger.Error("request failed",
 				zap.String("method", method),
